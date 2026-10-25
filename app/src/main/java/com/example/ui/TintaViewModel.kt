@@ -5,10 +5,14 @@ import android.content.Context
 import android.net.Uri
 import android.media.AudioAttributes
 import android.media.AudioFormat
+import android.media.AudioManager
 import android.media.AudioTrack
+import android.media.MediaPlayer
 import android.media.RingtoneManager
+import android.media.ToneGenerator
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.R
 import com.example.data.AppDatabase
 import com.example.data.TintaRepository
 import com.example.data.model.Chapter
@@ -39,7 +43,7 @@ enum class TintaTab(val label: String, val iconName: String) {
     OBRA("Obra", "view_timeline"),
     ESCRIBIR("Escribir", "history_edu"),
     PERSONAJES("Personajes", "group"),
-    RECURSOS("Recursos", "auto_awesome")
+    RECURSOS("Guía de Estilo", "auto_stories")
 }
 
 /** Opciones de filtro disponibles en la Biblioteca. */
@@ -925,78 +929,61 @@ Ahora que conoces todos los rincones del Atelier, crea tu primera historia pulsa
         }
     }
 
+    private var activeMediaPlayer: MediaPlayer? = null
+
     /**
      * Emite un suave y melodioso sonido de campana zen / chime armónico al finalizar la sesión del cronómetro.
+     * Utiliza MediaPlayer con AudioAttributes.USAGE_MEDIA / STREAM_MUSIC para garantizar
+     * audibilidad en emuladores y dispositivos, con ToneGenerator como respaldo.
      */
     fun playChimeSound() {
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(Dispatchers.Main) {
+            val context = getApplication<Application>().applicationContext
             try {
-                // Genera un chime dulce y armónico (arpegio celestial C5 -> E5 -> G5 -> C6 con decaimiento suave)
-                val sampleRate = 44100
-                val durationMs = 1200
-                val numSamples = (sampleRate * (durationMs / 1000.0)).toInt()
-                val buffer = ShortArray(numSamples)
-
-                val notes = listOf(
-                    Triple(0, 523.25, 0.65),     // C5
-                    Triple(180, 659.25, 0.70),   // E5
-                    Triple(360, 783.99, 0.75),   // G5
-                    Triple(540, 1046.50, 0.85)   // C6
-                )
-
-                for (i in 0 until numSamples) {
-                    val tMs = (i * 1000.0) / sampleRate
-                    var sample = 0.0
-                    for ((startMs, freq, amp) in notes) {
-                        if (tMs >= startMs) {
-                            val dt = (tMs - startMs) / 1000.0
-                            val decay = kotlin.math.exp(-3.8 * dt)
-                            // Tono suave con sobretono armónico para simular campana / marimba zen
-                            val wave = kotlin.math.sin(2.0 * Math.PI * freq * dt) +
-                                    0.25 * kotlin.math.sin(4.0 * Math.PI * freq * dt)
-                            sample += wave * decay * amp
-                        }
+                activeMediaPlayer?.release()
+                activeMediaPlayer = MediaPlayer.create(context, R.raw.chime_bell)?.apply {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build()
+                    )
+                    setVolume(1.0f, 1.0f)
+                    setOnCompletionListener {
+                        it.release()
+                        activeMediaPlayer = null
                     }
-                    val clamped = sample.coerceIn(-1.0, 1.0)
-                    buffer[i] = (clamped * Short.MAX_VALUE * 0.75).toInt().toShort()
+                    start()
                 }
+            } catch (_: Throwable) {}
 
-                val audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
+            // Respaldo simultáneo mediante ToneGenerator en STREAM_MUSIC para garantizar audibilidad universal
+            try {
+                val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
+                toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 550)
+            } catch (_: Throwable) {}
 
-                val audioFormat = AudioFormat.Builder()
-                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                    .setSampleRate(sampleRate)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                    .build()
-
-                val audioTrack = AudioTrack.Builder()
-                    .setAudioAttributes(audioAttributes)
-                    .setAudioFormat(audioFormat)
-                    .setBufferSizeInBytes(buffer.size * 2)
-                    .setTransferMode(AudioTrack.MODE_STATIC)
-                    .build()
-
-                audioTrack.write(buffer, 0, buffer.size)
-                audioTrack.play()
-
-                delay(durationMs.toLong() + 200L)
-                try {
-                    audioTrack.stop()
-                    audioTrack.release()
-                } catch (_: Throwable) {}
-            } catch (_: Throwable) {
-                // Fallback seguro a notificación nativa si el hardware o entorno JVM no permite AudioTrack
-                try {
-                    val context = getApplication<Application>().applicationContext
-                    val notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    val ringtone = RingtoneManager.getRingtone(context, notificationUri)
-                    ringtone?.play()
-                } catch (_: Throwable) {}
-            }
+            try {
+                val notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                val ringtone = RingtoneManager.getRingtone(context, notificationUri)
+                ringtone?.play()
+            } catch (_: Throwable) {}
         }
+    }
+
+    /**
+     * Inserta una plantilla literaria (Monomito, Arcos de Personaje, Ritmo Pacing, etc.)
+     * directamente en el capítulo activo del Atelier de Escritura.
+     */
+    fun insertLiteraryTemplate(templateTitle: String, templateMarkdown: String) {
+        val current = _chapterContent.value
+        val newContent = if (current.isBlank()) {
+            templateMarkdown
+        } else {
+            current.trimEnd() + "\n\n" + templateMarkdown
+        }
+        updateChapterContent(newContent)
+        showToast("✨ Plantilla '$templateTitle' insertada en el manuscrito")
     }
 
     fun pauseTimer() {
@@ -1008,6 +995,18 @@ Ahora que conoces todos los rincones del Atelier, crea tu primera historia pulsa
         val validMinutes = minutes.coerceIn(1, 180)
         _timerInitialMinutes.value = validMinutes
         resetTimer(validMinutes)
+    }
+
+    /**
+     * Inicia un temporizador rápido de segundos para pruebas inmediatas de campana/alerta.
+     */
+    fun setTimerDurationSeconds(seconds: Int) {
+        pauseTimer()
+        _timerSeconds.value = seconds.coerceIn(3, 7200)
+        initialSessionWords = _chapterWordCount.value
+        _wordsWrittenInSession.value = 0
+        startTimer()
+        showToast("⏱️ Cronómetro de prueba iniciado ($seconds seg)")
     }
 
     fun resetTimer(minutes: Int = _timerInitialMinutes.value) {

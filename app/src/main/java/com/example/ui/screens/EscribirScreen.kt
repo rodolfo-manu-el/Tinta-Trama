@@ -12,6 +12,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -56,6 +57,7 @@ import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.PostAdd
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.VolumeUp
@@ -158,6 +160,7 @@ fun EscribirScreen(
     var isChapterDropdownExpanded by remember { mutableStateOf(false) }
     var isStatusDropdownExpanded by remember { mutableStateOf(false) }
     var showTimerDialog by remember { mutableStateOf(false) }
+    var showGuiaSheet by remember { mutableStateOf(false) }
     var isFullscreenReader by remember { mutableStateOf(false) }
 
     val currentChapter = activeChapters.find { it.id == activeChapterId }
@@ -561,6 +564,35 @@ fun EscribirScreen(
                             )
                         }
                     }
+
+                    // Botón para desplegar la Guía de Estilo y Consejos Literarios mientras se edita
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                        modifier = Modifier
+                            .clickable { showGuiaSheet = true }
+                            .testTag("open_guia_estilo_editor_button")
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lightbulb,
+                                contentDescription = "Guía de Estilo",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(
+                                text = "Guía de Estilo",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
 
                 // 3. Manuscript Paper Sheet
@@ -849,7 +881,24 @@ fun EscribirScreen(
                     viewModel.setTimerDuration(minutes)
                     showTimerDialog = false
                 },
-                onTestSound = { viewModel.playChimeSound() }
+                onSelectQuickTest = {
+                    viewModel.setTimerDurationSeconds(10)
+                    showTimerDialog = false
+                },
+                onTestSound = {
+                    viewModel.playChimeSound()
+                    viewModel.showToast("🔔 Reproduciendo campana zen...")
+                }
+            )
+        }
+
+        // Guía de Estilo y Consejos Literarios desplegable en vivo
+        if (showGuiaSheet) {
+            GuiaEstiloModalBottomSheet(
+                onDismiss = { showGuiaSheet = false },
+                onInsertTemplate = { title, markdown ->
+                    viewModel.insertLiteraryTemplate(title, markdown)
+                }
             )
         }
 
@@ -876,6 +925,7 @@ private fun PomodoroTimerDialog(
     onDismiss: () -> Unit,
     onReset: () -> Unit,
     onSelectDuration: (Int) -> Unit,
+    onSelectQuickTest: () -> Unit,
     onTestSound: () -> Unit
 ) {
     var customMinutesInput by remember { mutableStateOf("") }
@@ -902,11 +952,29 @@ private fun PomodoroTimerDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                // Quick Preset Chips
+                // Quick Preset Chips con botón de prueba rápida de 10s
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    OutlinedButton(
+                        onClick = onSelectQuickTest,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, TintaAccent.copy(alpha = 0.8f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = TintaAccent.copy(alpha = 0.12f)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 6.dp),
+                        modifier = Modifier.weight(1.1f)
+                    ) {
+                        Text(
+                            text = "10s (Test)",
+                            fontWeight = FontWeight.Bold,
+                            color = TintaAccent,
+                            fontSize = 11.sp
+                        )
+                    }
+
                     listOf(15, 25, 45, 60).forEach { mins ->
                         val isSelected = initialMinutes == mins
                         OutlinedButton(
@@ -916,6 +984,7 @@ private fun PomodoroTimerDialog(
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = if (isSelected) TintaAccent.copy(alpha = 0.15f) else Color.Transparent
                             ),
+                            contentPadding = PaddingValues(horizontal = 4.dp),
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(

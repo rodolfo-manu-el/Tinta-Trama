@@ -37,6 +37,7 @@ import com.example.ui.components.TintaToast
 import com.example.ui.components.TintaTopHeader
 import com.example.ui.screens.BibliotecaScreen
 import com.example.ui.screens.EscribirScreen
+import com.example.ui.screens.GuiaEstiloScreen
 import com.example.ui.screens.ObraScreen
 import com.example.ui.screens.PersonajesScreen
 import com.example.ui.screens.RecursosScreen
@@ -115,7 +116,7 @@ class MainActivity : ComponentActivity() {
                                 TintaTab.OBRA -> ObraScreen(viewModel = viewModel)
                                 TintaTab.ESCRIBIR -> EscribirScreen(viewModel = viewModel)
                                 TintaTab.PERSONAJES -> PersonajesScreen(viewModel = viewModel)
-                                TintaTab.RECURSOS -> RecursosScreen(viewModel = viewModel)
+                                TintaTab.RECURSOS -> GuiaEstiloScreen(viewModel = viewModel)
                             }
                         }
 
