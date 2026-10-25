@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -131,11 +132,8 @@ fun BibliotecaScreen(
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        // Author Greeting & Status - El banner 'En progreso' solo se muestra si hay historias activas y no se está en Archivados
-        SectionGreeting(
-            hasInProgressNovels = hasInProgressNovels && selectedFilter != FilterOption.ARCHIVED,
-            onStreakClick = { viewModel.showToast("Tinta & Trama listo para escribir") }
-        )
+        // Author Greeting
+        SectionGreeting()
 
         // Stat Pills Row
         StatPillsRow(
@@ -416,57 +414,25 @@ fun BibliotecaScreen(
 }
 
 @Composable
-private fun SectionGreeting(hasInProgressNovels: Boolean, onStreakClick: () -> Unit) {
+private fun SectionGreeting() {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "TINTA & TRAMA",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.4.sp
-                )
-                Text(
-                    text = "Tu Espacio Creativo",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            // El indicador / badge "En progreso" solo se renderiza si hay manuscritos en progreso activos
-            if (hasInProgressNovels) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable { onStreakClick() }
-                        .testTag("streak_badge")
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(text = "✍️", fontSize = 15.sp)
-                        Text(
-                            text = "En progreso",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.secondary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
+        Column {
+            Text(
+                text = "TINTA & TRAMA",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.4.sp
+            )
+            Text(
+                text = "Tu Espacio Creativo",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
 
         Text(
-            text = if (hasInProgressNovels) "\"Las palabras bien ordenadas dan vida a grandes historias.\"" else "Organiza tus novelas, capítulos y personajes en un solo lugar.",
+            text = "\"Las palabras bien ordenadas dan vida a grandes historias.\"",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontStyle = FontStyle.Italic
@@ -1256,7 +1222,7 @@ private fun GridBookCard(
                 // Botones de acción
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
@@ -1266,14 +1232,16 @@ private fun GridBookCard(
                             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
                             contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                         ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(36.dp)
+                            .height(34.dp)
                     ) {
                         Text(
                             text = if (isSelected) "Escribir" else "Abrir",
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
                         )
                     }
 
@@ -1281,7 +1249,7 @@ private fun GridBookCard(
                         IconButton(
                             onClick = { menuExpanded = true },
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(34.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                 .testTag("novel_more_button_${novel.id}")
@@ -1517,14 +1485,16 @@ private fun DetailedManuscriptCard(
                                 containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
                                 contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                             ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                             modifier = Modifier
                                 .weight(1f)
-                                .height(38.dp)
+                                .height(36.dp)
                         ) {
                             Text(
                                 text = if (isSelected) "Continuar en Atelier" else "Cargar en Atelier",
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
@@ -1538,7 +1508,7 @@ private fun DetailedManuscriptCard(
                             IconButton(
                                 onClick = { menuExpanded = true },
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(36.dp)
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                     .testTag("novel_more_button_${novel.id}")

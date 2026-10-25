@@ -1296,7 +1296,7 @@ fun splitIntoPages(content: String): List<String> {
 
     for (p in paragraphs) {
         val pWords = p.trim().split(Regex("\\s+")).count { it.isNotBlank() }
-        if (currentWords + pWords > 240 && currentPage.isNotBlank()) {
+        if (currentWords + pWords > 190 && currentPage.isNotBlank()) {
             pages.add(currentPage.toString().trim())
             currentPage.clear()
             currentWords = 0
@@ -1385,13 +1385,20 @@ fun FullscreenFlipBookReader(
                         )
                     }
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
+                    ) {
                         Text(
                             text = novelTitle.uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = TintaAccent,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.4.sp
+                            letterSpacing = 1.4.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "Cap. ${chapter.number}: ${chapter.title}",
@@ -1449,7 +1456,7 @@ fun FullscreenFlipBookReader(
                     }
                 }
 
-                // Lienzo 3D del Libro con Efecto Flip Book
+                // Lienzo 3D del Libro con Efecto Flip Book Realista
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -1466,38 +1473,54 @@ fun FullscreenFlipBookReader(
                         val pageOffset = (pagerState.currentPage - pageIndex) + pagerState.currentPageOffsetFraction
                         val pageText = pages.getOrElse(pageIndex) { "" }
 
+                        // Efecto 3D de lomo y vuelta de hoja de libro real:
+                        // La hoja que avanza pivota sobre el lomo izquierdo (x = 0f).
+                        // La hoja que descansa debajo se mantiene plana en el plano de lectura.
+                        val isTurningForward = pageOffset in 0f..1f
+                        val isUnderneathNext = pageOffset in -1f..0f
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .graphicsLayer {
-                                    cameraDistance = 16f * density
-                                    val rotation = (pageOffset * 90f).coerceIn(-90f, 90f)
-                                    if (pageOffset < 0f) {
-                                        // Pasa hacia la izquierda - pivote en el lomo izquierdo
-                                        transformOrigin = TransformOrigin(0f, 0.5f)
-                                        rotationY = rotation
-                                    } else if (pageOffset > 0f) {
-                                        // Viene desde la derecha - pivote en borde derecho
-                                        transformOrigin = TransformOrigin(1f, 0.5f)
-                                        rotationY = rotation
+                                    cameraDistance = 24f * density
+                                    transformOrigin = TransformOrigin(0f, 0.5f) // El lomo del libro siempre está a la izquierda
+
+                                    if (isTurningForward) {
+                                        // Hoja superior levantándose y girando hacia el lomo izquierdo
+                                        val rot = (-pageOffset * 90f).coerceIn(-90f, 0f)
+                                        rotationY = rot
+                                        // A medida que la hoja se pone perpendicular, se desvanece suavemente
+                                        alpha = if (pageOffset > 0.85f) ((1f - pageOffset) / 0.15f).coerceIn(0f, 1f) else 1f
+                                    } else if (isUnderneathNext) {
+                                        // Hoja inferior reposando en el libro (plana, sin distorsión)
+                                        rotationY = 0f
+                                        val depthScale = 1f - (kotlin.math.abs(pageOffset) * 0.02f)
+                                        scaleX = depthScale
+                                        scaleY = depthScale
+                                        alpha = 1f
+                                    } else {
+                                        rotationY = 0f
+                                        alpha = 1f
                                     }
                                 }
-                                .shadow(12.dp, RoundedCornerShape(14.dp))
-                                .clip(RoundedCornerShape(14.dp))
+                                .shadow(
+                                    elevation = 10.dp,
+                                    shape = RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp, topEnd = 12.dp, bottomEnd = 12.dp)
+                                )
+                                .clip(RoundedCornerShape(topStart = 2.dp, bottomStart = 2.dp, topEnd = 12.dp, bottomEnd = 12.dp))
                                 .background(pageBgColor)
                         ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(horizontal = 24.dp, vertical = 22.dp)
-                                    .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.SpaceBetween
+                                    .padding(horizontal = 24.dp, vertical = 18.dp)
                             ) {
-                                // Encabezado editorial de la página
+                                // Encabezado editorial fijo en la parte superior
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(bottom = 12.dp),
+                                        .padding(bottom = 10.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -1505,8 +1528,12 @@ fun FullscreenFlipBookReader(
                                         text = novelTitle.uppercase(),
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                         color = pageTextColor.copy(alpha = 0.55f),
-                                        letterSpacing = 1.2.sp
+                                        letterSpacing = 1.2.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "CAPÍTULO ${chapter.number}",
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
@@ -1515,23 +1542,32 @@ fun FullscreenFlipBookReader(
                                     )
                                 }
 
-                                // Contenido de la página
-                                Text(
-                                    text = pageText.ifBlank { "Página en blanco" },
-                                    style = TextStyle(
-                                        fontFamily = if (selectedFont == "Newsreader") NewsreaderFontFamily else PlusJakartaSansFontFamily,
-                                        fontSize = readerFontSize.sp,
-                                        lineHeight = (readerFontSize * 1.6f).sp,
-                                        color = pageTextColor
-                                    ),
-                                    modifier = Modifier.weight(1f)
-                                )
+                                // Contenido desplazable verticalmente (resuelve completamente el problema de corte de texto)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxWidth()
+                                        .verticalScroll(rememberScrollState())
+                                ) {
+                                    Text(
+                                        text = pageText.ifBlank { "Página en blanco" },
+                                        style = TextStyle(
+                                            fontFamily = if (selectedFont == "Newsreader") NewsreaderFontFamily else PlusJakartaSansFontFamily,
+                                            fontSize = readerFontSize.sp,
+                                            lineHeight = (readerFontSize * 1.6f).sp,
+                                            color = pageTextColor
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 14.dp)
+                                    )
+                                }
 
                                 // Pie de página editorial con paginación
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 14.dp),
+                                        .padding(top = 8.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -1541,8 +1577,12 @@ fun FullscreenFlipBookReader(
                                             fontStyle = FontStyle.Italic,
                                             fontSize = 11.sp,
                                             color = pageTextColor.copy(alpha = 0.6f)
-                                        )
+                                        ),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "Página ${pageIndex + 1} de ${pages.size}",
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
@@ -1552,18 +1592,48 @@ fun FullscreenFlipBookReader(
                                 }
                             }
 
-                            // Sombra táctil del lomo del libro
+                            // Sombra táctil del lomo encuadernado (borde izquierdo)
                             Box(
                                 modifier = Modifier
                                     .fillMaxHeight()
-                                    .width(22.dp)
+                                    .width(26.dp)
                                     .background(
                                         Brush.horizontalGradient(
-                                            listOf(Color.Black.copy(alpha = 0.16f), Color.Transparent)
+                                            listOf(
+                                                Color.Black.copy(alpha = 0.24f),
+                                                Color.Black.copy(alpha = 0.08f),
+                                                Color.Transparent
+                                            )
                                         )
                                     )
                                     .align(Alignment.CenterStart)
                             )
+
+                            // Sombra de curvatura 3D sobre la página que se pliega
+                            if (isTurningForward && pageOffset > 0.05f) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(
+                                                    Color.Transparent,
+                                                    Color.Black.copy(alpha = (pageOffset * 0.28f).coerceIn(0f, 0.28f))
+                                                )
+                                            )
+                                        )
+                                )
+                            }
+
+                            // Sombra proyectada sobre la página que espera debajo
+                            if (isUnderneathNext && pageOffset < -0.05f) {
+                                val castShadowAlpha = (kotlin.math.abs(pageOffset) * 0.35f).coerceIn(0f, 0.35f)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = castShadowAlpha))
+                                )
+                            }
                         }
                     }
                 }
