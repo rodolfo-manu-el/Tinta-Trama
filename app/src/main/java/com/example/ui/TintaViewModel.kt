@@ -38,6 +38,27 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+sealed interface AppUpdateState {
+    object Idle : AppUpdateState
+    object Checking : AppUpdateState
+    data class UpdateAvailable(
+        val latestTag: String,
+        val releaseName: String,
+        val downloadUrl: String,
+        val releaseHtmlUrl: String,
+        val publishedAt: String,
+        val changelog: String
+    ) : AppUpdateState
+    data class UpToDate(
+        val currentVersion: String,
+        val latestTag: String,
+        val downloadUrl: String,
+        val releaseHtmlUrl: String,
+        val checkedAt: String
+    ) : AppUpdateState
+    data class Error(val message: String, val releaseHtmlUrl: String) : AppUpdateState
+}
+
 enum class TintaTab(val label: String, val iconName: String) {
     BIBLIOTECA("Biblioteca", "local_library"),
     OBRA("Obra", "view_timeline"),
@@ -271,6 +292,15 @@ class TintaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _backupJsonString = MutableStateFlow<String?>(null)
     val backupJsonString: StateFlow<String?> = _backupJsonString.asStateFlow()
+
+    private val _showProfileDialog = MutableStateFlow(false)
+    val showProfileDialog: StateFlow<Boolean> = _showProfileDialog.asStateFlow()
+
+    private val _authorName = MutableStateFlow("Escritor")
+    val authorName: StateFlow<String> = _authorName.asStateFlow()
+
+    private val _updateState = MutableStateFlow<AppUpdateState>(AppUpdateState.Idle)
+    val updateState: StateFlow<AppUpdateState> = _updateState.asStateFlow()
 
     init {
         checkAndCreateTutorialOnFirstRun()
@@ -2067,5 +2097,132 @@ Ahora que conoces todos los rincones del Atelier, crea tu primera historia pulsa
 
     fun dismissToast() {
         _toastMessage.value = null
+    }
+
+    fun openProfileDialog() {
+        _showProfileDialog.value = true
+    }
+
+    fun closeProfileDialog() {
+        _showProfileDialog.value = false
+    }
+
+    fun setAuthorName(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isNotBlank()) {
+            _authorName.value = trimmed
+        }
+    }
+
+    fun checkForUpdates() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _updateState.value = AppUpdateState.Checking
+            try {
+                val url = java.net.URL("https://api.github.com/repos/rodolfo-manu-el/Tinta-Trama/releases/latest")
+                val connection = url.openConnection() as java.net.HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                connection.setRequestProperty("User-Agent", "Tinta-Trama-Android-App")
+                connection.connectTimeout = 8000
+                connection.readTimeout = 8000
+
+                val responseCode = connection.responseCode
+                if (responseCode == 200) {
+                    val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+                    val json = org.json.JSONObject(responseBody)
+                    val tagName = json.optString("tag_name", "latest")
+                    val releaseName = json.optString("name", tagName)
+                    val releaseHtmlUrl = json.optString("html_url", "https://github.com/rodolfo-manu-el/Tinta-Trama/releases")
+                    val publishedAt = json.optString("published_at", "")
+                    val body = json.optString("body", "Compilación de mantenimiento y mejoras continuas.")
+
+                    var apkDownloadUrl = ""
+                    val assets = json.optJSONArray("assets")
+                    if (assets != null) {
+                        for (i in 0 until assets.length()) {
+                            val asset = assets.getJSONObject(i)
+                            val name = asset.optString("name", "")
+                            if (name.endsWith(".apk", ignoreCase = true)) {
+                                apkDownloadUrl = asset.optString("browser_download_url", "")
+                                break
+                            }
+                        }
+                    }
+                    if (apkDownloadUrl.isBlank()) {
+                        apkDownloadUrl = releaseHtmlUrl
+                    }
+
+                    val formattedDate = try {
+                        if (publishedAt.length >= 10) publishedAt.substring(0, 10) else publishedAt
+                    } catch (_: Exception) {
+                        publishedAt
+                    }
+
+                    val currentVersionName = com.example.BuildConfig.VERSION_NAME
+                    val currentVersionCode = com.example.BuildConfig.VERSION_CODE
+
+                    val isNewer = isReleaseNewer(tagName, currentVersionName, currentVersionCode)
+
+                    if (isNewer) {
+                        _updateState.value = AppUpdateState.UpdateAvailable(
+                            latestTag = tagName,
+                            releaseName = releaseName.ifBlank { tagName },
+                            downloadUrl = apkDownloadUrl,
+                            releaseHtmlUrl = releaseHtmlUrl,
+                            publishedAt = formattedDate,
+                            changelog = body.ifBlank { "Compilación automática con mejoras de rendimiento y estabilidad." }
+                        )
+                    } else {
+                        _updateState.value = AppUpdateState.UpToDate(
+                            currentVersion = "v$currentVersionName (Build $currentVersionCode)",
+                            latestTag = tagName,
+                            downloadUrl = apkDownloadUrl,
+                            releaseHtmlUrl = releaseHtmlUrl,
+                            checkedAt = formattedDate
+                        )
+                    }
+                } else if (responseCode == 404) {
+                    _updateState.value = AppUpdateState.UpToDate(
+                        currentVersion = "v${com.example.BuildConfig.VERSION_NAME}",
+                        latestTag = "v${com.example.BuildConfig.VERSION_NAME}",
+                        downloadUrl = "https://github.com/rodolfo-manu-el/Tinta-Trama/releases",
+                        releaseHtmlUrl = "https://github.com/rodolfo-manu-el/Tinta-Trama/releases",
+                        checkedAt = "Al día"
+                    )
+                } else {
+                    _updateState.value = AppUpdateState.Error(
+                        message = "GitHub respondió con código $responseCode",
+                        releaseHtmlUrl = "https://github.com/rodolfo-manu-el/Tinta-Trama/releases"
+                    )
+                }
+            } catch (e: Exception) {
+                _updateState.value = AppUpdateState.Error(
+                    message = "No se pudo consultar GitHub: ${e.localizedMessage ?: "Verifica tu conexión a Internet"}",
+                    releaseHtmlUrl = "https://github.com/rodolfo-manu-el/Tinta-Trama/releases"
+                )
+            }
+        }
+    }
+
+    private fun isReleaseNewer(latestTag: String, currentVersionName: String, currentVersionCode: Int): Boolean {
+        val debugRegex = Regex("""debug-build-(\d+)""")
+        val match = debugRegex.find(latestTag)
+        if (match != null) {
+            val runNumber = match.groupValues[1].toIntOrNull() ?: 0
+            val remoteVersionCode = 11 + runNumber
+            return remoteVersionCode > currentVersionCode
+        }
+
+        val cleanLatest = latestTag.removePrefix("v").trim()
+        val cleanCurrent = currentVersionName.removePrefix("v").trim()
+        val latestParts = cleanLatest.split(".").mapNotNull { it.toIntOrNull() }
+        val currentParts = cleanCurrent.split(".").mapNotNull { it.toIntOrNull() }
+        for (i in 0 until maxOf(latestParts.size, currentParts.size)) {
+            val l = latestParts.getOrElse(i) { 0 }
+            val c = currentParts.getOrElse(i) { 0 }
+            if (l > c) return true
+            if (l < c) return false
+        }
+        return false
     }
 }

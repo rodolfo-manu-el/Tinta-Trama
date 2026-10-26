@@ -85,6 +85,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -147,14 +149,92 @@ fun EscribirScreen(
     var tfv by remember(activeChapterId) {
         mutableStateOf(TextFieldValue(text = chapterContent, selection = TextRange(chapterContent.length)))
     }
+    val editorFocusRequester = remember { FocusRequester() }
 
+    var lastActiveChapterId by remember { mutableStateOf(activeChapterId) }
     LaunchedEffect(chapterContent, activeChapterId) {
-        if (tfv.text != chapterContent) {
+        if (activeChapterId != lastActiveChapterId) {
+            lastActiveChapterId = activeChapterId
             tfv = TextFieldValue(
                 text = chapterContent,
                 selection = TextRange(chapterContent.length)
             )
+        } else if (tfv.text != chapterContent) {
+            val safeStart = tfv.selection.start.coerceIn(0, chapterContent.length)
+            val safeEnd = tfv.selection.end.coerceIn(0, chapterContent.length)
+            tfv = tfv.copy(
+                text = chapterContent,
+                selection = TextRange(safeStart, safeEnd)
+            )
         }
+    }
+
+    val applyFormat: (String) -> Unit = { formatType ->
+        val currentText = tfv.text
+        val start = tfv.selection.min.coerceIn(0, currentText.length)
+        val end = tfv.selection.max.coerceIn(0, currentText.length)
+        val selectedText = if (start < end) currentText.substring(start, end) else ""
+
+        val (prefix, suffix, defaultInsert, label) = when (formatType) {
+            "bold" -> arrayOf("**", "**", "texto en negrita", "Negrita")
+            "italic" -> arrayOf("*", "*", "texto en cursiva", "Cursiva")
+            "quote" -> {
+                val pre = if (start == 0 || currentText.getOrNull(start - 1) == '\n') "> " else "\n> "
+                arrayOf(pre, "\n", "Cita literaria", "Cita")
+            }
+            "header" -> {
+                val pre = if (start == 0 || currentText.getOrNull(start - 1) == '\n') "# " else "\n# "
+                arrayOf(pre, "\n", "Encabezado principal", "Encabezado")
+            }
+            "list" -> {
+                val pre = if (start == 0 || currentText.getOrNull(start - 1) == '\n') "- " else "\n- "
+                arrayOf(pre, "\n", "Elemento de lista", "Lista")
+            }
+            else -> arrayOf("", "", "", "")
+        }
+
+        val (newText, newSelection) = if (selectedText.isNotBlank()) {
+            val replaced = currentText.substring(0, start) + prefix + selectedText + suffix + currentText.substring(end)
+            val selStart = start + prefix.length
+            val selEnd = selStart + selectedText.length
+            Pair(replaced, TextRange(selStart, selEnd))
+        } else {
+            val replaced = currentText.substring(0, start) + prefix + defaultInsert + suffix + currentText.substring(start)
+            val selStart = start + prefix.length
+            val selEnd = selStart + defaultInsert.length
+            Pair(replaced, TextRange(selStart, selEnd))
+        }
+
+        tfv = tfv.copy(
+            text = newText,
+            selection = newSelection
+        )
+        viewModel.updateChapterContent(newText)
+        viewModel.showToast("Formato '$label' aplicado")
+        try {
+            editorFocusRequester.requestFocus()
+        } catch (_: Exception) {}
+    }
+
+    val insertPageBreakAtCursor: () -> Unit = {
+        val currentText = tfv.text
+        val marker = "\n\n--- PÁGINA ---\n\n"
+        val pos = tfv.selection.start.coerceIn(0, currentText.length)
+        val newText = if (pos in 0..currentText.length) {
+            currentText.substring(0, pos) + marker + currentText.substring(pos)
+        } else {
+            if (currentText.isBlank()) "" else currentText + marker
+        }
+        val newPos = (pos + marker.length).coerceIn(0, newText.length)
+        tfv = tfv.copy(
+            text = newText,
+            selection = TextRange(newPos)
+        )
+        viewModel.updateChapterContent(newText)
+        viewModel.showToast("📄 Nueva página añadida al manuscrito")
+        try {
+            editorFocusRequester.requestFocus()
+        } catch (_: Exception) {}
     }
 
     var isChapterDropdownExpanded by remember { mutableStateOf(false) }
@@ -720,6 +800,7 @@ fun EscribirScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(340.dp)
+                                    .focusRequester(editorFocusRequester)
                                     .testTag("editable_manuscript_text")
                             )
 
@@ -826,19 +907,19 @@ fun EscribirScreen(
                     // Formatting Tools Group
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         FormatToolButton(text = "B", isBold = true, textPrimary = textPrimary, onClick = {
-                            viewModel.applyMarkdownFormat("bold", tfv.selection.start, tfv.selection.end)
+                            applyFormat("bold")
                         })
                         FormatToolButton(text = "I", isItalic = true, textPrimary = textPrimary, onClick = {
-                            viewModel.applyMarkdownFormat("italic", tfv.selection.start, tfv.selection.end)
+                            applyFormat("italic")
                         })
                         FormatToolButton(text = "H1", isBold = true, textPrimary = textPrimary, onClick = {
-                            viewModel.applyMarkdownFormat("header", tfv.selection.start, tfv.selection.end)
+                            applyFormat("header")
                         })
                         FormatIconButton(icon = Icons.Default.FormatQuote, onClick = {
-                            viewModel.applyMarkdownFormat("quote", tfv.selection.start, tfv.selection.end)
+                            applyFormat("quote")
                         })
                         FormatIconButton(icon = Icons.Default.FormatListBulleted, onClick = {
-                            viewModel.applyMarkdownFormat("list", tfv.selection.start, tfv.selection.end)
+                            applyFormat("list")
                         })
                     }
 
@@ -852,7 +933,7 @@ fun EscribirScreen(
                             contentDescription = "Añadir página",
                             modifier = Modifier.testTag("add_page_button"),
                             onClick = {
-                                viewModel.insertPageBreak(tfv.selection.start)
+                                insertPageBreakAtCursor()
                             }
                         )
                         FormatIconButton(

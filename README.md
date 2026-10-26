@@ -23,6 +23,21 @@ A diferencia de editores de notas convencionales, Tinta & Trama integra el flujo
 
 ---
 
+## 📱 Capturas de Pantalla
+
+<p align="center">
+  <img src="docs/screenshots/biblioteca.png" width="22%" alt="Biblioteca Editorial" />
+  <img src="docs/screenshots/editor.png" width="22%" alt="Editor de Manuscrito" />
+  <img src="docs/screenshots/personajes.png" width="22%" alt="Reparto de Personajes" />
+  <img src="docs/screenshots/lectura3d.png" width="22%" alt="Lectura 3D Flip-Book" />
+</p>
+
+<p align="center">
+  <em>Biblioteca Editorial · Editor Inmersivo · Reparto de Personajes · Lector 3D Flip-Book</em>
+</p>
+
+---
+
 ## ✨ Características Principales
 
 ### 📚 1. Biblioteca Editorial Multimanuscrito
