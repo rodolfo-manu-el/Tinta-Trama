@@ -31,7 +31,15 @@ jobs:
       - name: Restore Keystore for Consistent APK Signatures
         run: |
           mkdir -p ~/.android
-          base64 -d debug.keystore.base64 > ~/.android/debug.keystore
+          if [ -n "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" ]; then
+            echo "Restoring keystore from GitHub Secret DEBUG_KEYSTORE_BASE64..."
+            echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 --decode > ~/.android/debug.keystore
+          elif [ -f "debug.keystore.base64" ]; then
+            echo "Restoring keystore from repository file debug.keystore.base64..."
+            base64 -d debug.keystore.base64 > ~/.android/debug.keystore
+          else
+            echo "::warning ::No persistent keystore found. Gradle will generate a default debug keystore."
+          fi
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
