@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Language-Kotlin%202.0%2B-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose%20%2B%20M3-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose" />
   <img src="https://img.shields.io/badge/Database-Room%20(SQLite)-FFA000?style=for-the-badge&logo=sqlite&logoColor=white" alt="Room DB" />
-  <img src="https://img.shields.io/badge/Architecture-MVVM%20%2B%20UDF-009688?style=for-the-badge" alt="MVVM Architecture" />
+  <img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="CI/CD" />
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" />
 </p>
 
@@ -128,10 +128,16 @@ git clone https://github.com/tu-usuario/tinta-y-trama.git
 cd tinta-y-trama
 
 # 3. Compilar la aplicación en modo Debug
+# En Linux / macOS:
 ./gradlew assembleDebug
+# En Windows (PowerShell / CMD):
+gradlew.bat assembleDebug
 
 # 4. Ejecutar la suite de pruebas unitarias
+# En Linux / macOS:
 ./gradlew testDebugUnitTest
+# En Windows:
+gradlew.bat testDebugUnitTest
 ```
 
 ---
@@ -142,10 +148,20 @@ El repositorio incluye pruebas unitarias automatizadas que validan los flujos cr
 - **Gestión de obras y estado de lectura** (`toggleNovelRead`).
 - **Navegación y selección de capítulos activos**.
 - **Cálculo de metas y progreso de palabras**.
-- **Ejecución de pruebas:**
+- **Ejecución rápida:**
   ```bash
-  gradle :app:testDebugUnitTest
+  ./gradlew testDebugUnitTest
   ```
+
+---
+
+## 📚 Documentación del Repositorio
+
+Para facilitar la colaboración y el mantenimiento a largo plazo:
+- 📋 [**Registro de Cambios (CHANGELOG.md)**](./CHANGELOG.md): Historial de versiones y mejoras.
+- 🤝 [**Guía de Contribución (CONTRIBUTING.md)**](./CONTRIBUTING.md): Normas de commits, ramas y Pull Requests.
+- 📜 [**Código de Conducta (CODE_OF_CONDUCT.md)**](./CODE_OF_CONDUCT.md): Estándares de convivencia de la comunidad.
+- 🗺️ [**Hoja de Ruta (ROADMAP.md)**](./ROADMAP.md): Próximas funcionalidades planificadas.
 
 ---
 
@@ -154,12 +170,6 @@ El repositorio incluye pruebas unitarias automatizadas que validan los flujos cr
 - **100% Privado:** Todas tus historias, personajes y notas se almacenan exclusivamente en la base de datos local SQLite de tu dispositivo.
 - **Sin cuentas obligatorias:** No requiere registro, inicios de sesión de terceros ni recopilación de datos de telemetría.
 - **Zero Storage Permissions:** Utiliza el Android Photo Picker oficial del sistema, sin solicitar permisos invasivos de almacenamiento del dispositivo (`READ_EXTERNAL_STORAGE`).
-
----
-
-## 🗺️ Hoja de Ruta (Roadmap)
-
-Consulta nuestro archivo [ROADMAP.md](./ROADMAP.md) para ver las funcionalidades planificadas para próximas versiones (exportación a EPUB/PDF, sincronización opcional en la nube y visualizador de grafos en Canvas).
 
 ---
 
