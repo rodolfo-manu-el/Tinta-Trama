@@ -4,30 +4,33 @@ Este documento define la hoja de ruta de desarrollo técnico y funcional para la
 
 ---
 
-## 🎯 Fase 1: Reorganización y Refactorización del Repositorio (Corto Plazo)
-- [ ] Renombrar el paquete raíz de `com.example` a `com.aistudio.tintatrama`.
-- [ ] Modularizar el código por características (`feature/library`, `feature/editor`, `feature/characters`, `feature/codex`).
-- [ ] Implementar inyección de dependencias con Hilt o Koin para desacoplar `TintaViewModel` y `TintaRepository`.
-- [ ] Unificar el manejo de errores y estados de UI utilizando sealed interfaces (`UiState<T>`).
-- [ ] Aumentar la cobertura de pruebas unitarias (`TintaViewModelTest`, `TintaRepositoryTest`, Room DAOs).
+## 🎯 Fase 1: Arquitectura y Experiencia Base (Completado)
+- [x] **Persistencia Local Robusta:** Room Database con Entities, DAOs y Repositorio unificado reactivo con Kotlin Coroutines y Flow.
+- [x] **Editor Inmersivo y Tipografías:** Soporte de negritas, cursivas, listas, citas y títulos con fuentes locales (*Newsreader* y *Plus Jakarta Sans*).
+- [x] **Modo Lectura Flip-Book 3D:** Vista de lectura en pantalla completa con simulación tridimensional de paso de página física y sombras de curvatura.
+- [x] **Cronómetro Zen & Sprint de Escritura:** Bloques de concentración con alerta sonora acústica integrada mediante `ToneGenerator`.
+- [x] **Elenco & Dramatis Personae:** Registro de personajes, psicología, arquetipos y red de relaciones/vínculos interpersonales.
+- [x] **Guía de Estilo y Plantillas Literarias:** Módulo pedagógico con el Monomito, Los 3 Actos, Arcos de Personaje y Ritmo Narrativo con volcado directo al editor.
+- [x] **Pruebas Unitarias de Arquitectura:** Validación de CUJs y operaciones clave con JUnit y Robolectric.
 
 ---
 
-## 🎯 Fase 2: Experiencia de Escribir y Producción Editorial (Mediano Plazo)
-- [ ] **Editor Enriquecido (Rich Text):** Soporte de negritas, cursivas, listas y títulos mediante Markdown/AnnotatedStrings.
-- [ ] **Exportación Profesional:** Exportación del manuscrito completo en formatos **PDF, EPUB y Markdown (.md)**.
-- [ ] **Cronómetro de Escritura y Modo Pomodoro:** Sesiones de escritura con metas diarias de palabras y estadísticas.
-- [ ] **Historial de Revisiones (Versionado):** Guardado automático de versiones históricas por capítulo.
+## 🎯 Fase 2: Producción Editorial y Exportación Avanzada (En curso)
+- [x] **Importación de Documentos y Respaldo:** Carga y lectura de textos locales.
+- [ ] **Exportación Multiformato:** Generación y descarga directa en formatos **PDF editorial con maquetación**, **EPUB 3** y **Markdown (.md)** empaquetado.
+- [ ] **Historial de Revisiones (Versionado de Capítulos):** Sistema de snapshots o ramas para guardar borradores anteriores y comparar cambios de escena.
+- [ ] **Buscador Global con Regex:** Búsqueda y reemplazo de términos o nombres en todos los capítulos de la obra.
 
 ---
 
-## 🎯 Fase 3: Worldbuilding y Herramientas Creativas (Mediano/Largo Plazo)
-- [ ] **Matriz de Vínculos Avanzada:** Mapa conceptual interactivo con Canvas para conectar personajes y tramas.
-- [ ] **Códice Literario Extendido:** Organización por mapas, regiones, objetos mágicos, líneas temporales y árboles genealógicos.
-- [ ] **Asistente Literario Local/AI:** Integración opcional de sugerencias estéticas, corrección de estilo y brainstorming.
+## 🎯 Fase 3: Worldbuilding & Visualización Conceptual (Mediano Plazo)
+- [ ] **Matriz de Vínculos en Canvas Interactivo:** Visualización gráfica con nodos y líneas vectoriales para arrastrar personajes y ver la red de relaciones.
+- [ ] **Líneas Temporales (Timelines):** Cronología interactiva de eventos clave de la trama organizados por fecha o época dentro de la historia.
+- [ ] **Códice de Lore y Glosario:** Fichas para ubicaciones, facciones, magia, tecnología y artefactos literarios.
 
 ---
 
-## 🎯 Fase 4: Sincronización y Multiplataforma (Largo Plazo)
-- [ ] **Sincronización en la Nube:** Backup automático y sincronización multiplataforma mediante Firebase / Cloud Storage.
-- [ ] **Soporte Tablet y Escritorio:** Layouts adaptativos para pantallas grandes (KMP / Compose Multiplatform).
+## 🎯 Fase 4: Modularización y Multiplataforma (Largo Plazo)
+- [ ] **Sincronización Opcional en la Nube:** Copia de seguridad y sincronización cifrada mediante Firebase / Cloud Storage.
+- [ ] **Layouts Adaptativos para Pantallas Grandes:** Optimización para tablets y plegables mediante Navigation Rail y paneles duales maestro-detalle.
+- [ ] **Modularización por Features:** Separación del código en módulos Gradle independientes (`:feature:library`, `:feature:editor`, `:feature:characters`, `:core:database`).
