@@ -28,9 +28,9 @@ A diferencia de editores de notas convencionales, Tinta & Trama integra el flujo
 ## Capturas de pantalla
 
 <div align="center">
-  <img width="280" alt="personajes" src="https://github.com/user-attachments/assets/8bdf0b61-5905-4123-83fe-0be4496aaa94" />
-  <img width="280" alt="editor" src="https://github.com/user-attachments/assets/879a68a0-4155-46ca-a996-660755fa6ab4" />
-  <img width="280" alt="biblioteca" src="https://github.com/user-attachments/assets/f37c2c7d-7d07-416b-bd8a-3d44a9f60a56" />
+  <img width="220" alt="personajes" src="https://github.com/user-attachments/assets/8bdf0b61-5905-4123-83fe-0be4496aaa94" />
+  <img width="220" alt="editor" src="https://github.com/user-attachments/assets/879a68a0-4155-46ca-a996-660755fa6ab4" />
+  <img width="220" alt="biblioteca" src="https://github.com/user-attachments/assets/f37c2c7d-7d07-416b-bd8a-3d44a9f60a56" />
 </div>
 
 <p align="center">
