@@ -17,9 +17,9 @@
 
 ## 📖 Acerca del Proyecto
 
-**Tinta & Trama** es una aplicación Android nativa diseñada específicamente para novelistas, dramaturgos, guionistas y narradores que buscan un entorno de creación literaria estructurado, libre de distracciones y con rigor editorial en sus dispositivos móviles.
+**Tinta & Trama** es una aplicación Android nativa diseñada específicamente para novelistas, dramaturgos, guionistas y narradores que buscan un entorno de creación literaria estructurado, liberador y visualmente cómodo.
 
-A diferencia de editores de notas convencionales, Tinta & Trama integra el flujo creativo completo de un autor: desde la concepción de la obra, la arquitectura por actos y capítulos, el modelado psicológico de los personajes y sus vínculos dinámicos, hasta un editor inmersivo con estética de papel y un lector digital con simulación 3D de paso de página física.
+A diferencia de editores de notas convencionales, Tinta & Trama integra el flujo creativo completo de un autor: desde la concepción de la obra, la arquitectura por actos y capítulos, el modelado del reparto y la referencia editorial, hasta la lectura crítica del manuscrito en un formato inmersivo.
 
 ---
 
@@ -28,8 +28,9 @@ A diferencia de editores de notas convencionales, Tinta & Trama integra el flujo
 ## Capturas de pantalla
 
 <div align="center">
-  <img width="320" alt="personajes" src="https://github.com/user-attachments/assets/8bdf0b61-5905-4123-83fe-0be4496aaa94" />
-  <img width="320" alt="editor" src="https://github.com/user-attachments/assets/879a68a0-4155-46ca-a996-660755fa6ab4" />
+  <img width="280" alt="personajes" src="https://github.com/user-attachments/assets/8bdf0b61-5905-4123-83fe-0be4496aaa94" />
+  <img width="280" alt="editor" src="https://github.com/user-attachments/assets/879a68a0-4155-46ca-a996-660755fa6ab4" />
+  <img width="280" alt="biblioteca" src="https://github.com/user-attachments/assets/f37c2c7d-7d07-416b-bd8a-3d44a9f60a56" />
 </div>
 
 <p align="center">
@@ -43,7 +44,7 @@ A diferencia de editores de notas convencionales, Tinta & Trama integra el flujo
 ### 📚 1. Biblioteca Editorial Multimanuscrito
 - **Gestión integral de obras:** Creación y seguimiento de múltiples manuscritos con metas globales de palabras y porcentajes de finalización calculados en tiempo real.
 - **Portadas personalizadas en formato editorial (2:3):** Selector de portadas desde la galería del dispositivo mediante Android Photo Picker (cero permisos intrusivos) o portadas temáticas integradas.
-- **Filtros y vistas adaptativas:** Alternancia fluida entre vista de cuadrícula (Grid) y lista detallada, con filtrado por estado (en curso, revisión, completado, archivado).
+- **Filtros y vistas adaptativas:** Alternancia fluida entre vista de cuadrícula y lista detallada, con filtrado por estado (en curso, revisión, completado, archivado).
 - **Importación y respaldo:** Carga de documentos de texto y respaldos locales.
 
 ### ✍️ 2. Atelier de Escritura & Modo Inmersivo
@@ -53,7 +54,7 @@ A diferencia de editores de notas convencionales, Tinta & Trama integra el flujo
 - **Contador en vivo:** Métrica inmediata de palabras, caracteres y tiempo estimado de lectura.
 
 ### 📖 3. Modo Lectura Flip-Book 3D Realista
-- **Experiencia de lectura física:** Transición tridimensional auténtica inspirada en libros reales: la hoja activa pivota sobre el lomo encuadernado (`TransformOrigin(0f, 0.5f)`), mientras la siguiente reposa debajo recibiendo sombras de curvatura y oclusión ambiental dinámicas.
+- **Experiencia de lectura física:** Transición tridimensional auténtica inspirada en libros reales: la hoja activa pivota sobre el lomo encuadernado.
 - **Lectura completa sin cortes:** Encabezados y foliado editorial fijos, con desplazamiento vertical continuo en cada página para no perder ni una sola línea de texto.
 - **Ajustes de lectura:** Control rápido de tamaño de tipografía (A±) y tono de papel en pantalla completa.
 
