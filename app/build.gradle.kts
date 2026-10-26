@@ -16,7 +16,8 @@ android {
     applicationId = "com.aistudio.tintatrama.vlkxmq"
     minSdk = 24
     targetSdk = 36
-    versionCode = 11
+    val autoVersionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()?.let { 11 + it }) ?: 11
+    versionCode = project.findProperty("customVersionCode")?.toString()?.toIntOrNull() ?: autoVersionCode
     versionName = "1.2.8"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

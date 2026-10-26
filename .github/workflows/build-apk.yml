@@ -28,6 +28,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Restore Keystore for Consistent APK Signatures
+        run: |
+          mkdir -p ~/.android
+          base64 -d debug.keystore.base64 > ~/.android/debug.keystore
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
