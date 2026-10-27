@@ -2205,8 +2205,8 @@ Ahora que conoces todos los rincones del Atelier, crea tu primera historia pulsa
     }
 
     private fun isReleaseNewer(latestTag: String, currentVersionName: String, currentVersionCode: Int): Boolean {
-        val debugRegex = Regex("""debug-build-(\d+)""")
-        val match = debugRegex.find(latestTag)
+        val buildRegex = Regex("""(?:debug-build-|.*build\.)(\d+)""")
+        val match = buildRegex.find(latestTag)
         if (match != null) {
             val runNumber = match.groupValues[1].toIntOrNull() ?: 0
             val remoteVersionCode = 11 + runNumber
